@@ -1,23 +1,30 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState, useMemo, useCallback, memo } from 'react'
+
+
+function Child ({addClick, data}) {
+  console.log('xxx---child-render')
+  return (
+    <div>
+      <span>{data.num}</span>
+      <button onClick={addClick}>+</button>
+    </div>
+  )
+}
+
+Child = memo(Child)
 
 function App() {
+
+  const [num, setNum] = useState(0)
+  const [name, setName] = useState('')
+
+  const addClick = useCallback(() => setNum(num + 1), [num])
+  const data = useMemo(() => ({num}), [num])
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <input onChange={(e) => setName(e.target.value)} />
+      <span>{name}</span>
+      <Child data={data} addClick={addClick} />
     </div>
   );
 }
