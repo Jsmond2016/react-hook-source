@@ -1,6 +1,6 @@
 ## 手写 React-Hooks
 
-## Hooks 使用
+## Hooks 的基本使用
 
 ```jsx
 // App.js
@@ -154,7 +154,7 @@ function useMemo(callback, dependencies) {
 }
 ```
 
-### 具体例子
+### 使用自定义 useState, useCallback, useMemo 的具体例子
 
 ```jsx
 import React, { memo } from 'react'
@@ -249,4 +249,39 @@ function render () {
 
 render()
 
+```
+
+### useReducer
+
+useReducer 的基本使用
+
+
+```jsx
+import React, { useReducer } from 'react'
+import ReactDOM from 'react-dom'
+
+function reducer(state, action) {
+  if (action.type === 'add') {
+    return state + 1
+  } else {
+    return state
+  }
+}
+
+function Counter() {
+  console.log('Counter---render');
+  const [state, dispatch] = useReducer(reducer, 0)
+  return (
+    <div>
+      <p>{state}</p>
+      <button onClick={() => dispatch({type: 'add'})}>+</button>
+    </div>
+  )
+}
+
+function render () {
+  ReactDOM.render(<Counter />, document.getElementById('root'))
+}
+
+render()
 ```
