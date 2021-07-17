@@ -1,4 +1,18 @@
-import { useState, useMemo, useCallback, memo } from 'react'
+import React, { memo } from 'react'
+import reactDom from 'react-dom'
+
+
+let lastState
+function useState(initialState) {
+  lastState = initialState || lastState
+  function setState(newState) {
+    lastState = newState
+    render()
+  }
+
+  return [lastState, setState]
+}
+
 
 
 function Child ({addClick, data}) {
@@ -18,15 +32,20 @@ function App() {
   const [num, setNum] = useState(0)
   const [name, setName] = useState('')
 
-  const addClick = useCallback(() => setNum(num + 1), [num])
-  const data = useMemo(() => ({num}), [num])
+  // const addClick = useCallback(() => setNum(num + 1), [num])
+  // const data = useMemo(() => ({num}), [num])
   return (
     <div className="App">
       <input onChange={(e) => setName(e.target.value)} />
       <span>{name}</span>
-      <Child data={data} addClick={addClick} />
+      <Child data={{num}} addClick={() => setNum(num + 1)} />
     </div>
   );
 }
+
+function render () {
+  reactDom.render(<App />)
+}
+
 
 export default App;
