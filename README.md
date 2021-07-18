@@ -575,6 +575,8 @@ render()
   - 重新渲染用户界面
 - 判断是否宏任务和微任务队列为空则判断是否执行 `requestldleCallback` 的回调函数
 
+浏览器的 EventLoop
+
 ![](./imgs/useLayoutEffect.jpg)
 
 
@@ -597,9 +599,13 @@ function App() {
   }
   useEffect(() => {
     // while(true){}
+    console.log('useEffect')
     divRef.current.style.transform = "translate(500px)"
     divRef.current.style.transition = "all 800ms"
   })
+
+  console.log('render')
+
   return (
     <div style={styl} ref={divRef}>
       content....
@@ -615,6 +621,13 @@ render()
 ```
 
 可以看到页面每次刷新后 黄色小方块 过渡的效果。
+
+打印结果为 
+
+```js
+render
+useEffect
+```
 
 即，useEffect 内的操作是在浏览器渲染后进行的。可以使用 `while(true)` 验证，小方块是有渲染出来的( DOM 加载完成 )，但是没有过渡效果。
 
@@ -635,9 +648,13 @@ function App() {
     backgroundColor: 'yellow'
   }
   useLayoutEffect(() => {
+    console.log('useLayoutEffect')
     divRef.current.style.transform = "translate(500px)"
     divRef.current.style.transition = "all 800ms"
   })
+
+  console.log('render')
+
   return (
     <div style={styl} ref={divRef}>
       content....
@@ -655,4 +672,199 @@ render()
 
 此时我们可以看到，小方块在页面渲染后，没有变化，直接停留在了过渡后的位置。
 
+打印结果为 
+
+```js
+useLayoutEffect
+render
+```
+
 useLayoutEffect 是在浏览器渲染前执行的。可以使用 `while(true)` 验证，小方块没有渲染，DOM 渲染被阻塞。
+
+### useEffect 优化
+
+为了保证 useEffect 是在浏览器渲染后执行，参照上面的事件模型，我们可以使用 `setTimeout` 实现
+
+```jsx
+let lastDependencies
+function useEffect(callback, dependencies) {
+  if (lastDependencies) {
+    let changed = !dependencies.every((item, index) => item == lastDependencies[index])
+    if (changed) {
+      setTimeout(callback)
+      lastDependencies = dependencies
+    }
+  } else {
+    // 首次渲染
+    setTimeout(callback)
+    lastDependencies = dependencies
+  }
+}
+```
+
+### 实现 useLayoutEffect
+
+useLayoutEffect 实现原理和 useEffect 相似，区别在于 执行顺序，应该在 DOM 渲染之前。
+
+我们可以使用 `Promise.resolve()` 微任务实现。
+
+实现代码：
+
+```jsx
+let lastLayoutDependencies
+function useLayoutEffect(callback, dependencies) {
+  if (lastLayoutDependencies) {
+    let changed = !dependencies.every((item, index) => item == lastLayoutDependencies[index])
+    if (changed) {
+      Promise.resolve().then(callback)
+      lastLayoutDependencies = dependencies
+    }
+  } else {
+    // 首次渲染
+    Promise.resolve().then(callback)
+    lastLayoutDependencies = dependencies
+  }
+}
+```
+
+示例代码：
+
+```jsx
+import React, { useRef } from 'react'
+import ReactDOM from 'react-dom'
+
+
+
+let lastDependencies
+function useEffect(callback, dependencies) {
+  if (lastDependencies) {
+    let changed = !dependencies.every((item, index) => item == lastDependencies[index])
+    if (changed) {
+      setTimeout(callback)
+      lastDependencies = dependencies
+    }
+  } else {
+    // 首次渲染
+    setTimeout(callback)
+    lastDependencies = dependencies
+  }
+}
+
+
+let lastLayoutDependencies
+function useLayoutEffect(callback, dependencies) {
+  if (lastLayoutDependencies) {
+    let changed = !dependencies.every((item, index) => item == lastLayoutDependencies[index])
+    if (changed) {
+      Promise.resolve().then(callback)
+      lastLayoutDependencies = dependencies
+    }
+  } else {
+    // 首次渲染
+    Promise.resolve().then(callback)
+    lastLayoutDependencies = dependencies
+  }
+}
+
+function App() {
+  const divRef = useRef()
+
+  let styl = {
+    width: '100px',
+    height: '100px',
+    backgroundColor: 'yellow'
+  }
+  useLayoutEffect(() => {
+    console.log('useLayoutEffect')
+    // while(true){}
+    divRef.current.style.transform = "translate(500px)"
+    divRef.current.style.transition = "all 800ms"
+  })
+
+  console.log('组件--render')
+
+  return (
+    <div style={styl} ref={divRef}>
+      content....
+    </div>
+  )
+}
+
+function render() {
+  ReactDOM.render(<App />, document.getElementById('root'))
+}
+
+render()
+
+```
+
+可以看到页面效果，渲染完成后，没有过渡状态的小方块，只有结果状态的小方块。
+
+同时，控制台打印的结果为：
+
+```js
+render
+useLayoutEffect
+```
+
+注意这里的顺序不是
+
+```js
+useLayoutEffect
+render
+```
+
+实际是这样的
+
+```js
+render // 组件 render，宏任务
+useLayoutEffect
+浏览器 render // 这个 render 是在浏览器内存中的 dom render 过程
+```
+
+上面，代码中的 `Promise.resolve().then(callback)` 可以替换成 `queueMicrotask(callback)`，执行效果是一样的。
+
+[queueMicrotask](https://developer.mozilla.org/zh-CN/docs/Web/API/WindowOrWorkerGlobalScope/queueMicrotask) 作用是往微任务队列里新增一个 操作。缺点是当前只有 Chrome 支持。
+
+
+其他小知识：
+
+`requestIdleCallback(fn)` 方法，作用是 把一个任务交给浏览器，让浏览器不忙的时候执行。
+
+```js
+// eg:
+requestIdleCallback(() => console.log(Date.now()))
+```
+
+解释：
+
+1秒 = 1000 ms = 60帧 ==> 1帧 = 16.67 ms
+
+大多数设备的刷新频率是60次/秒，也就说是浏览器对每一帧画面的渲染工作要在16ms内完成，超出这个时间，页面的渲染就会出现卡顿现象，影响用户体验
+
+
+浏览器每一帧多余的时间，就会去执行 requestIdleCallback
+
+
+### useRef 实现
+
+
+```jsx
+
+let lastRef
+function useRef(initialRef) {
+  lastRef = lastRef || initialRef
+  return {
+    current: lastRef
+  }
+}
+
+```
+
+
+
+
+
+## 参考资料：
+
+- [深度剖析浏览器渲染性能原理，你到底知道多少？](https://www.jianshu.com/p/a32b890c29b1)
