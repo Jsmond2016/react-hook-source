@@ -576,3 +576,83 @@ render()
 - 判断是否宏任务和微任务队列为空则判断是否执行 `requestldleCallback` 的回调函数
 
 ![](./imgs/useLayoutEffect.jpg)
+
+
+使用 useEffect 和 useLayoutEffect 的不同效果预览：
+
+使用 useEffect 效果：
+
+```jsx
+
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
+
+function App() {
+  const divRef = useRef()
+  
+  let styl = {
+    width: '100px',
+    height: '100px',
+    backgroundColor: 'yellow'
+  }
+  useEffect(() => {
+    // while(true){}
+    divRef.current.style.transform = "translate(500px)"
+    divRef.current.style.transition = "all 800ms"
+  })
+  return (
+    <div style={styl} ref={divRef}>
+      content....
+    </div>
+  )
+}
+
+function render() {
+  ReactDOM.render(<App />, document.getElementById('root'))
+}
+
+render()
+```
+
+可以看到页面每次刷新后 黄色小方块 过渡的效果。
+
+即，useEffect 内的操作是在浏览器渲染后进行的。可以使用 `while(true)` 验证，小方块是有渲染出来的( DOM 加载完成 )，但是没有过渡效果。
+
+使用 useLayoutEffect 效果
+
+```jsx
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
+import ReactDOM from 'react-dom'
+
+
+
+function App() {
+  const divRef = useRef()
+
+  let styl = {
+    width: '100px',
+    height: '100px',
+    backgroundColor: 'yellow'
+  }
+  useLayoutEffect(() => {
+    divRef.current.style.transform = "translate(500px)"
+    divRef.current.style.transition = "all 800ms"
+  })
+  return (
+    <div style={styl} ref={divRef}>
+      content....
+    </div>
+  )
+}
+
+function render() {
+  ReactDOM.render(<App />, document.getElementById('root'))
+}
+
+render()
+
+```
+
+此时我们可以看到，小方块在页面渲染后，没有变化，直接停留在了过渡后的位置。
+
+useLayoutEffect 是在浏览器渲染前执行的。可以使用 `while(true)` 验证，小方块没有渲染，DOM 渲染被阻塞。

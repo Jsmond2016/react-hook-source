@@ -1,34 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import ReactDOM from 'react-dom'
 
 
-let lastDependencies
-function useEffect(callback, dependencies) {
-  if (lastDependencies) {
-    let changed = !dependencies.every((item, index) => item == lastDependencies[index])
-    if (changed) {
-      callback()
-      lastDependencies = dependencies
-    }
-  } else {
-    // 首次渲染
-    callback()
-    lastDependencies = dependencies
-  }
-}
 
 function App() {
-  let [num, setNum] = useState(0)
-  let [name, setName] = useState('')
-  useEffect(() => {
-    console.log('num',num)
-  }, [num])
+  const divRef = useRef()
+
+  let styl = {
+    width: '100px',
+    height: '100px',
+    backgroundColor: 'yellow'
+  }
+  useLayoutEffect(() => {
+    divRef.current.style.transform = "translate(500px)"
+    divRef.current.style.transition = "all 800ms"
+  })
   return (
-    <div>
-      <input onChange={(e) => setName(e.target.value)  } />
-      <p>{name}</p>
-      <button onClick={() => setNum(num + 1)}>+</button>
-      <p>{num}</p>
+    <div style={styl} ref={divRef}>
+      content....
     </div>
   )
 }
