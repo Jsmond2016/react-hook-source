@@ -45,7 +45,6 @@ export default App;
 ```jsx
 import ReactDOM from 'react-dom'
 
-
 let lastState
 function useState(initialState) {
   lastState = lastState || initialState
@@ -74,9 +73,9 @@ render()
 
 ```
 
-### 完善 useState
+## 完善 useState
 
-前面的 state 存储在一个 lastState 变量中，当定义多个 state 的时候会导致变量覆盖，需要使用数组
+前面的 `state` 存储在一个 `lastState` 变量中，当定义多个 `state` 的时候会导致变量覆盖，需要使用数组
 
 ```jsx
 let lastState
@@ -98,10 +97,10 @@ function render () {
 }
 ```
 
-通过上面的代码可以看出，state 和  index 是强关联关系，因此，不能再 if，while 等判断条件下使用 setState ，不然会导致 state 更新错乱
+通过上面的代码可以看出，`state` 和  `index` 是强关联关系，因此，不能再 ` if，while` 等判断条件下使用 `setState `，不然会导致 `state` 更新错乱
 
 
-### 实现 useCallBack
+## 实现 useCallBack
 
 主要功能：缓存函数
 
@@ -127,7 +126,7 @@ function useCallback(callback, dependencies) {
 ```
 
 
-### 实现 useMemo
+## 实现 useMemo
 
 原理和 useCallback 相似
 
@@ -154,7 +153,7 @@ function useMemo(callback, dependencies) {
 }
 ```
 
-### 使用自定义 useState, useCallback, useMemo 的具体例子
+## 使用自定义 useState, useCallback, useMemo 的具体例子
 
 ```jsx
 import React, { memo } from 'react'
@@ -251,7 +250,7 @@ render()
 
 ```
 
-### useReducer
+## useReducer
 
 useReducer 的基本使用
 
@@ -286,7 +285,7 @@ function render () {
 render()
 ```
 
-### 自定义 useReducer
+## 自定义 useReducer
 
 ```jsx
 let lastState
@@ -346,7 +345,7 @@ render()
 
 ```
 
-### useContext
+## useContext
 
 useContext 的基本使用
 
@@ -394,7 +393,7 @@ function render() {
 render()
 ```
 
-### useContext 手写实现
+## useContext 手写实现
 
 ```jsx
 function useContext(context) {
@@ -449,7 +448,7 @@ function render() {
 render()
 ```
 
-### useEffect
+## useEffect
 
 基本使用：
 
@@ -555,7 +554,7 @@ render()
 
 ```
 
-### useLayoutEffect
+## useLayoutEffect
 
 关于 useLayoutEffect 和 useEffect 区别
 
@@ -681,7 +680,7 @@ render
 
 useLayoutEffect 是在浏览器渲染前执行的。可以使用 `while(true)` 验证，小方块没有渲染，DOM 渲染被阻塞。
 
-### useEffect 优化
+## useEffect 优化
 
 为了保证 useEffect 是在浏览器渲染后执行，参照上面的事件模型，我们可以使用 `setTimeout` 实现
 
@@ -702,7 +701,7 @@ function useEffect(callback, dependencies) {
 }
 ```
 
-### 实现 useLayoutEffect
+## 实现 useLayoutEffect
 
 useLayoutEffect 实现原理和 useEffect 相似，区别在于 执行顺序，应该在 DOM 渲染之前。
 
@@ -846,7 +845,7 @@ requestIdleCallback(() => console.log(Date.now()))
 浏览器每一帧多余的时间，就会去执行 requestIdleCallback
 
 
-### useRef 实现
+## useRef 实现
 
 
 ```jsx
@@ -861,10 +860,90 @@ function useRef(initialRef) {
 
 ```
 
+示例：
+
+```jsx
+import React  from 'react'
+import ReactDOM from 'react-dom'
+
+
+
+let lastDependencies
+function useEffect(callback, dependencies) {
+  if (lastDependencies) {
+    let changed = !dependencies.every((item, index) => item == lastDependencies[index])
+    if (changed) {
+      setTimeout(callback)
+      lastDependencies = dependencies
+    }
+  } else {
+    // 首次渲染
+    setTimeout(callback)
+    lastDependencies = dependencies
+  }
+}
+
+
+let lastLayoutDependencies
+function useLayoutEffect(callback, dependencies) {
+  if (lastLayoutDependencies) {
+    let changed = !dependencies.every((item, index) => item == lastLayoutDependencies[index])
+    if (changed) {
+      Promise.resolve().then(callback)
+      lastLayoutDependencies = dependencies
+    }
+  } else {
+    // 首次渲染
+    Promise.resolve().then(callback)
+    lastLayoutDependencies = dependencies
+  }
+}
+
+
+let lastRef
+function useRef(initialRef) {
+  lastRef = lastRef || initialRef
+  return {
+    current: lastRef
+  }
+}
+
+function App() {
+  const divRef = useRef()
+
+  let styl = {
+    width: '100px',
+    height: '100px',
+    backgroundColor: 'yellow'
+  }
+  useLayoutEffect(() => {
+    console.log('useLayoutEffect')
+    // while(true){}
+    divRef.current.style.transform = "translate(500px)"
+    divRef.current.style.transition = "all 800ms"
+  })
+
+  console.log('render')
+
+  return (
+    <div style={styl} ref={divRef}>
+      content....
+    </div>
+  )
+}
+
+function render() {
+  ReactDOM.render(<App />, document.getElementById('root'))
+}
+
+render()
+
+```
 
 
 
 
 ## 参考资料：
 
+- [珠峰培训](http://www.zhufengpeixun.cn/)
 - [深度剖析浏览器渲染性能原理，你到底知道多少？](https://www.jianshu.com/p/a32b890c29b1)
