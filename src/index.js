@@ -1,41 +1,42 @@
-import React from 'react'
+import React, { useState } from 'react'
 import ReactDOM from 'react-dom'
 
 
-function reducer(state, action) {
-  if (action.type === 'add') {
-    return state + 1
-  } else {
-    return state
-  }
-}
+let AppContext = React.createContext()
 
-let lastState
-function useReducer(reducer, initialState) {
-  lastState = lastState || initialState
-  function dispatch(action) {
-    lastState = reducer(lastState, action)
-    render()
-  }
-  return [lastState, dispatch]
+function useContext(context) {
+  console.log('context._currentValue: ', context._currentValue);
+  return context._currentValue
 }
 
 
 function Counter() {
   console.log('Counter---render');
-  const [state, dispatch] = useReducer(reducer, 0)
+  console.log('AppContext: ', AppContext);
+  const { state, setState } = useContext(AppContext)
   return (
     <div>
-      <p>{state}</p>
-      <button onClick={() => dispatch({type: 'add'})}>+</button>
+      <p>{state.num}</p>
+      <button onClick={() => setState({num: state.num + 1})}>+</button>
     </div>
   )
 }
 
-
-function render () {
-  ReactDOM.render(<Counter />, document.getElementById('root'))
+function App() {
+  let [state, setState] = useState({ num: 0 })
+  return (
+    <AppContext.Provider value={{ state, setState }}>
+      <div>
+        <div>
+          <Counter />
+        </div>
+      </div>
+    </AppContext.Provider>
+  )
 }
 
+function render() {
+  ReactDOM.render(<App />, document.getElementById('root'))
+}
 
 render()

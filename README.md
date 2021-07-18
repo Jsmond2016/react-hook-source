@@ -345,3 +345,106 @@ function render () {
 render()
 
 ```
+
+### useContext
+
+useContext 的基本使用
+
+- 外层使用 `React.createContext()`
+- 父级提供 `Provider, value`
+- 子级使用 `useContext(AppContext)`，注意参数为外层定义的 `context` 
+
+示例代码：
+
+```jsx
+import React, { useContext, useState } from 'react'
+import ReactDOM from 'react-dom'
+
+
+let AppContext = React.createContext()
+
+function Counter() {
+  console.log('Counter---render');
+  const { state, setState } = useContext(AppContext)
+  return (
+    <div>
+      <p>{state.num}</p>
+      <button onClick={() => setState({num: state.num + 1})}>+</button>
+    </div>
+  )
+}
+
+function App() {
+  let [state, setState] = useState({ num: 0 })
+  return (
+    <AppContext.Provider value={{ state, setState }}>
+      <div>
+        <div>
+          <Counter />
+        </div>
+      </div>
+    </AppContext.Provider>
+  )
+}
+
+function render() {
+  ReactDOM.render(<App />, document.getElementById('root'))
+}
+
+render()
+```
+
+### useContext 手写实现
+
+```jsx
+function useContext(context) {
+  return context._currentValue
+}
+
+```
+
+示例：
+
+```jsx
+import React, { useState } from 'react'
+import ReactDOM from 'react-dom'
+
+
+let AppContext = React.createContext()
+
+function useContext(context) {
+  return context._currentValue
+}
+
+
+function Counter() {
+  console.log('Counter---render');
+  console.log('AppContext: ', AppContext);
+  const { state, setState } = useContext(AppContext)
+  return (
+    <div>
+      <p>{state.num}</p>
+      <button onClick={() => setState({num: state.num + 1})}>+</button>
+    </div>
+  )
+}
+
+function App() {
+  let [state, setState] = useState({ num: 0 })
+  return (
+    <AppContext.Provider value={{ state, setState }}>
+      <div>
+        <div>
+          <Counter />
+        </div>
+      </div>
+    </AppContext.Provider>
+  )
+}
+
+function render() {
+  ReactDOM.render(<App />, document.getElementById('root'))
+}
+
+render()
+```
