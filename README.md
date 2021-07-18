@@ -554,3 +554,25 @@ function render() {
 render()
 
 ```
+
+### useLayoutEffect
+
+关于 useLayoutEffect 和 useEffect 区别
+
+- 其函数签名与 `useEffect` 相同，但是它会在所有的 DOM 变更之后同步调用 effect
+- `useEffect` 不会阻塞浏览器渲染，而 `useLayoutEffect` 会阻塞浏览器渲染
+- `useEffect` 会在浏览器渲染结束后执行，`useLayoutEffect` 则是在 DOM 更新完成后，浏览器绘制前执行
+
+关于事件循环：
+
+- 从宏任务队列取出一个宏任务执行
+- 检查微任务队列,执行并清空微任务队列,如果在微任务的执行中又加入了新的微任务,则会继续执行新的微任务
+- 进入更新渲染阶段判断是否需要渲染.要根据屏幕刷新率、页面性能、页面是否在后台运行来共同决定,通常来说这个渲染间隔是固定的;一般为60帧秒。
+- 如果确定要更新会进入下面的步骤,否则本循环结束
+  - 如果窗口大小发生了变化,执行监听的 `resize` 事件
+  - 如果页面发生了滚动,执行 `scroll` 方法
+  - 执行帧动画回调,也就是 `requestAnimationFrame` 的回调
+  - 重新渲染用户界面
+- 判断是否宏任务和微任务队列为空则判断是否执行 `requestldleCallback` 的回调函数
+
+![](./imgs/useLayoutEffect.jpg)
