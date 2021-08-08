@@ -1,4 +1,19 @@
-## 手写 React-Hooks
+# React-Hook 原理实现
+
+文章导读：
+
+- React-Hook 基本使用
+- useState 实现
+- useCallback 实现
+- useMemo 实现
+- useReducer 实现
+- useContext 实现
+- useEffect 实现
+- useLayoutEffect 实现
+- useRef 实现
+
+正文开始:
+
 
 ## Hooks 的基本使用
 
@@ -36,8 +51,6 @@ function App() {
 }
 
 export default App;
-
-
 ```
 
 ## useState 初步实现
@@ -70,7 +83,6 @@ function render () {
 }
 
 render()
-
 ```
 
 ## 完善 useState
@@ -78,16 +90,19 @@ render()
 前面的 `state` 存储在一个 `lastState` 变量中，当定义多个 `state` 的时候会导致变量覆盖，需要使用数组
 
 ```jsx
-let lastState
+
+let lastStates = []
+let index = 0
 function useState(initialState) {
-  lastState = initialState || lastState
+  lastStates[index] = lastStates[index] || initialState
+  const currentIndex = index
   function setState(newState) {
-    lastState = newState
+    lastStates[currentIndex] = newState
     render()
   }
-
-  return [lastState, setState]
+  return [lastStates[index ++], setState]
 }
+
 
 // 每次 render 的时候讲 state 的index 重置为 0 
 
@@ -245,9 +260,7 @@ function render () {
   ReactDOM.render(<App />, document.getElementById('root'))
 }
 
-
 render()
-
 ```
 
 ## useReducer
@@ -340,9 +353,7 @@ function render () {
   ReactDOM.render(<Counter />, document.getElementById('root'))
 }
 
-
 render()
-
 ```
 
 ## useContext
@@ -399,7 +410,6 @@ render()
 function useContext(context) {
   return context._currentValue
 }
-
 ```
 
 示例：
@@ -479,7 +489,6 @@ function render() {
 }
 
 render()
-
 ```
 
 手写实现 useEffect
@@ -551,7 +560,6 @@ function render() {
 }
 
 render()
-
 ```
 
 ## useLayoutEffect
@@ -576,7 +584,8 @@ render()
 
 浏览器的 EventLoop
 
-![](./imgs/useLayoutEffect.jpg)
+![useLayoutEffect](https://p3-juejin.byteimg.com/tos-cn-i-k3u1fbpfcp/244d591c037f4ad4bd94220b62f8dc62~tplv-k3u1fbpfcp-zoom-1.image)
+
 
 
 使用 useEffect 和 useLayoutEffect 的不同效果预览：
@@ -666,7 +675,6 @@ function render() {
 }
 
 render()
-
 ```
 
 此时我们可以看到，小方块在页面渲染后，没有变化，直接停留在了过渡后的位置。
@@ -794,7 +802,6 @@ function render() {
 }
 
 render()
-
 ```
 
 可以看到页面效果，渲染完成后，没有过渡状态的小方块，只有结果状态的小方块。
@@ -816,7 +823,7 @@ render
 实际是这样的
 
 ```js
-render // 组件 render，宏任务
+render // 组件 render
 useLayoutEffect
 浏览器 render // 这个 render 是在浏览器内存中的 dom render 过程
 ```
@@ -857,7 +864,6 @@ function useRef(initialRef) {
     current: lastRef
   }
 }
-
 ```
 
 示例：
@@ -865,8 +871,6 @@ function useRef(initialRef) {
 ```jsx
 import React  from 'react'
 import ReactDOM from 'react-dom'
-
-
 
 let lastDependencies
 function useEffect(callback, dependencies) {
@@ -937,10 +941,9 @@ function render() {
 }
 
 render()
-
 ```
 
-
+代码地址：[react-hook-source](https://github.com/Jsmond2016/react-hook-source)
 
 
 ## 参考资料：
